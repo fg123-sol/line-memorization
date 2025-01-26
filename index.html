@@ -80,7 +80,7 @@
         // Detect character name: line in all caps
         if (line.match(/^[A-Z\s]+$/)) {
           if (currentCharacter) {
-            // If we have a previous character's lines, save them
+            // If we have a previous character's lines, save them as a block
             scriptData.push({ character: currentCharacter, lines: currentDialogue.trim() });
             currentDialogue = '';
           }
@@ -88,12 +88,12 @@
           if (!characters.includes(currentCharacter)) {
             characters.push(currentCharacter); // Track characters
         } else {
-          // Append line to current character's dialogue
+          // Append line to current character's multi-line dialogue
           currentDialogue += ' ' + line;
         }
       });
 
-      // Save the last character's lines
+      // Save the last character's lines (when the loop ends)
       if (currentCharacter) {
         scriptData.push({ character: currentCharacter, lines: currentDialogue.trim() });
       }
