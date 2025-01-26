@@ -70,33 +70,32 @@
       scriptData = [];
       characters = [];
       let currentCharacter = '';
-      let currentLines = [];
+      let currentDialogue = '';
 
       lines.forEach(line => {
         line = line.trim();
 
         if (!line) return; // Skip empty lines
 
-        // Assume if the line is a single word, it's a character's name
-        if (line.match(/^[A-Za-z ]+$/)) {
+        // Detect character name: line in all caps
+        if (line.match(/^[A-Z\s]+$/)) {
           if (currentCharacter) {
-            // Push the previous character's lines to the data
-            scriptData.push({ character: currentCharacter, lines: currentLines });
-            currentLines = [];
+            // If we have a previous character's lines, save them
+            scriptData.push({ character: currentCharacter, lines: currentDialogue.trim() });
+            currentDialogue = '';
           }
           currentCharacter = line; // Set the new character
           if (!characters.includes(currentCharacter)) {
             characters.push(currentCharacter); // Track characters
-          }
-        } else if (currentCharacter) {
-          // If it's not a character's name, it's a line of dialogue
-          currentLines.push(line);
+        } else {
+          // Append line to current character's dialogue
+          currentDialogue += ' ' + line;
         }
       });
 
-      // Push the last character's lines
+      // Save the last character's lines
       if (currentCharacter) {
-        scriptData.push({ character: currentCharacter, lines: currentLines });
+        scriptData.push({ character: currentCharacter, lines: currentDialogue.trim() });
       }
 
       populateCharacters();
@@ -119,33 +118,31 @@
       scriptDisplay.innerHTML = ''; // Clear previous script display
 
       scriptData.forEach(({ character, lines }) => {
-        lines.forEach(line => {
-          const lineElement = document.createElement('div');
-          lineElement.classList.add('line');
+        const lineElement = document.createElement('div');
+        lineElement.classList.add('line');
 
-          if (character === selectedCharacter) {
-            // Add a checkbox for the user's lines
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.classList.add('reveal-checkbox');
-            checkbox.addEventListener('change', () => {
-              lineText.style.display = checkbox.checked ? 'inline' : 'none';
-            });
+        if (character === selectedCharacter) {
+          // Add a checkbox for the user's lines
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.classList.add('reveal-checkbox');
+          checkbox.addEventListener('change', () => {
+            lineText.style.display = checkbox.checked ? 'inline' : 'none';
+          });
 
-            // Line text (hidden by default for the user's lines)
-            const lineText = document.createElement('span');
-            lineText.textContent = `${character}: ${line}`;
-            lineText.style.display = 'none';
+          // Line text (hidden by default for the user's lines)
+          const lineText = document.createElement('span');
+          lineText.textContent = `${character}: ${lines}`;
+          lineText.style.display = 'none';
 
-            lineElement.appendChild(checkbox);
-            lineElement.appendChild(lineText);
-          } else {
-            // Always show other characters' lines
-            lineElement.textContent = `${character}: ${line}`;
-          }
+          lineElement.appendChild(checkbox);
+          lineElement.appendChild(lineText);
+        } else {
+          // Always show other characters' lines
+          lineElement.textContent = `${character}: ${lines}`;
+        }
 
-          scriptDisplay.appendChild(lineElement);
-        });
+        scriptDisplay.appendChild(lineElement);
       });
     });
   </script>
