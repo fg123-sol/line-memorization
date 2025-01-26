@@ -4,14 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Line Memorization</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     .hidden { display: none; }
+    .line { margin: 5px 0; }
+    .reveal-checkbox { margin-right: 10px; }
   </style>
 </head>
 <body>
   <h1>Memorize Your Lines</h1>
-  <input type="file" id="upload" accept=".txt">
+  <input type="file" id="upload" accept=".txt,.pdf">
   <select id="character-select">
     <option value="">Select Your Character</option>
   </select>
@@ -26,26 +29,56 @@
     // Handle File Upload
     uploadInput.addEventListener('change', (event) => {
       const file = event.target.files[0];
-      const reader = new FileReader();
+      if (!file) return;
 
-      reader.onload = () => {
-        const lines = reader.result.split('\n');
-        scriptData = {};
-        lines.forEach(line => {
-          const [character, ...dialogue] = line.split(':');
-          if (character && dialogue.length) {
-            if (!scriptData[character.trim()]) scriptData[character.trim()] = [];
-            scriptData[character.trim()].push(dialogue.join(':').trim());
+      const fileType = file.type;
+
+      if (fileType === 'text/plain') {
+        // Handle plain text files
+        const reader = new FileReader();
+        reader.onload = () => {
+          parseScript(reader.result);
+        };
+        reader.readAsText(file);
+      } else if (fileType === 'application/pdf') {
+        // Handle PDF files
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const pdfData = new Uint8Array(reader.result);
+          const pdf = await pdfjsLib.getDocument(pdfData).promise;
+          let fullText = '';
+
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items.map((item) => item.str).join('\n');
+            fullText += pageText + '\n';
           }
-        });
 
-        populateCharacters();
-      };
-
-      reader.readAsText(file);
+          parseScript(fullText);
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        alert('Unsupported file type. Please upload a .txt or .pdf file.');
+      }
     });
 
-    // Populate Character Dropdown
+    // Parse the Script and Populate Character Data
+    function parseScript(text) {
+      const lines = text.split('\n');
+      scriptData = {};
+      lines.forEach(line => {
+        const [character, ...dialogue] = line.split(':');
+        if (character && dialogue.length) {
+          if (!scriptData[character.trim()]) scriptData[character.trim()] = [];
+          scriptData[character.trim()].push(dialogue.join(':').trim());
+        }
+      });
+
+      populateCharacters();
+    }
+
+    // Populate Character Dropdown Dynamically
     function populateCharacters() {
       characterSelect.innerHTML = '<option value="">Select Your Character</option>';
       Object.keys(scriptData).forEach(character => {
@@ -56,16 +89,37 @@
       });
     }
 
-    // Display Script with Filtering
+    // Display Script with Selective Reveal
     characterSelect.addEventListener('change', () => {
       const selectedCharacter = characterSelect.value;
-      scriptDisplay.innerHTML = '';
+      scriptDisplay.innerHTML = ''; // Clear previous script display
 
       Object.entries(scriptData).forEach(([character, lines]) => {
         lines.forEach(line => {
           const lineElement = document.createElement('div');
-          lineElement.textContent = `${character}: ${line}`;
-          if (character === selectedCharacter) lineElement.classList.add('hidden');
+          lineElement.classList.add('line');
+
+          if (character === selectedCharacter) {
+            // Add a checkbox for the user's lines
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.classList.add('reveal-checkbox');
+            checkbox.addEventListener('change', () => {
+              lineText.style.display = checkbox.checked ? 'inline' : 'none';
+            });
+
+            // Line text (hidden by default for the user's lines)
+            const lineText = document.createElement('span');
+            lineText.textContent = `${character}: ${line}`;
+            lineText.style.display = 'none';
+
+            lineElement.appendChild(checkbox);
+            lineElement.appendChild(lineText);
+          } else {
+            // Always show other characters' lines
+            lineElement.textContent = `${character}: ${line}`;
+          }
+
           scriptDisplay.appendChild(lineElement);
         });
       });
