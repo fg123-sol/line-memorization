@@ -77,7 +77,12 @@
 
         if (!line) return; // Skip empty lines
 
-        // Detect character name: line in all caps
+        // Exclude stage directions (e.g., "INT.", "EXT.", or other patterns)
+        if (line.match(/^(INT\.|EXT\.|CUT TO:|DISSOLVE TO:)/)) {
+          return; // Skip this line (it's a stage direction)
+        }
+
+        // Detect character name: line in all caps (including multi-word names)
         if (line.match(/^[A-Z\s]+$/)) {
           // If we have a previous character's lines, save them as a block
           if (currentCharacter) {
