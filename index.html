@@ -24,7 +24,8 @@
     const uploadInput = document.getElementById('upload');
     const characterSelect = document.getElementById('character-select');
     const scriptDisplay = document.getElementById('script-display');
-    let scriptData = {};
+    let scriptData = [];
+    let characters = [];
 
     // Handle File Upload
     uploadInput.addEventListener('change', (event) => {
@@ -66,14 +67,37 @@
     // Parse the Script and Populate Character Data
     function parseScript(text) {
       const lines = text.split('\n');
-      scriptData = {};
+      scriptData = [];
+      characters = [];
+      let currentCharacter = '';
+      let currentLines = [];
+
       lines.forEach(line => {
-        const [character, ...dialogue] = line.split(':');
-        if (character && dialogue.length) {
-          if (!scriptData[character.trim()]) scriptData[character.trim()] = [];
-          scriptData[character.trim()].push(dialogue.join(':').trim());
+        line = line.trim();
+
+        if (!line) return; // Skip empty lines
+
+        // Assume if the line is a single word, it's a character's name
+        if (line.match(/^[A-Za-z ]+$/)) {
+          if (currentCharacter) {
+            // Push the previous character's lines to the data
+            scriptData.push({ character: currentCharacter, lines: currentLines });
+            currentLines = [];
+          }
+          currentCharacter = line; // Set the new character
+          if (!characters.includes(currentCharacter)) {
+            characters.push(currentCharacter); // Track characters
+          }
+        } else if (currentCharacter) {
+          // If it's not a character's name, it's a line of dialogue
+          currentLines.push(line);
         }
       });
+
+      // Push the last character's lines
+      if (currentCharacter) {
+        scriptData.push({ character: currentCharacter, lines: currentLines });
+      }
 
       populateCharacters();
     }
@@ -81,7 +105,7 @@
     // Populate Character Dropdown Dynamically
     function populateCharacters() {
       characterSelect.innerHTML = '<option value="">Select Your Character</option>';
-      Object.keys(scriptData).forEach(character => {
+      characters.forEach(character => {
         const option = document.createElement('option');
         option.value = character;
         option.textContent = character;
@@ -94,7 +118,7 @@
       const selectedCharacter = characterSelect.value;
       scriptDisplay.innerHTML = ''; // Clear previous script display
 
-      Object.entries(scriptData).forEach(([character, lines]) => {
+      scriptData.forEach(({ character, lines }) => {
         lines.forEach(line => {
           const lineElement = document.createElement('div');
           lineElement.classList.add('line');
