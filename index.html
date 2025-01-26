@@ -82,8 +82,9 @@
           return; // Skip this line (it's a stage direction)
         }
 
-        // Detect character name: line in all caps (including multi-word names)
-        if (line.match(/^[A-Z\s]+$/)) {
+        // Detect character name: line in all caps (including multi-word names with punctuation like "MOLLY (V.O.)")
+        // Updated regex to handle "V.O." or similar notations as part of the name
+        if (line.match(/^[A-Z\s\(\)\.\-\/]+$/)) {
           // If we have a previous character's lines, save them as a block
           if (currentCharacter) {
             scriptData.push({ character: currentCharacter, lines: currentDialogue.trim() });
