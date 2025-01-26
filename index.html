@@ -87,6 +87,7 @@
           currentDialogue = ''; // Reset the dialogue
           if (!characters.includes(currentCharacter)) {
             characters.push(currentCharacter); // Track characters
+          }
         } else {
           // Append line to current character's multi-line dialogue
           currentDialogue += ' ' + line;
@@ -98,11 +99,15 @@
         scriptData.push({ character: currentCharacter, lines: currentDialogue.trim() });
       }
 
+      console.log('Characters:', characters); // Debugging: check the characters array
       populateCharacters();
     }
 
     // Populate Character Dropdown Dynamically
     function populateCharacters() {
+      // Debugging: log the characters array
+      console.log('Populating characters:', characters);
+
       characterSelect.innerHTML = '<option value="">Select Your Character</option>';
       characters.forEach(character => {
         const option = document.createElement('option');
