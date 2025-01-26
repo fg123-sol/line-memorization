@@ -79,12 +79,12 @@
 
         // Detect character name: line in all caps
         if (line.match(/^[A-Z\s]+$/)) {
+          // If we have a previous character's lines, save them as a block
           if (currentCharacter) {
-            // If we have a previous character's lines, save them as a block
             scriptData.push({ character: currentCharacter, lines: currentDialogue.trim() });
-            currentDialogue = '';
           }
           currentCharacter = line; // Set the new character
+          currentDialogue = ''; // Reset the dialogue
           if (!characters.includes(currentCharacter)) {
             characters.push(currentCharacter); // Track characters
         } else {
