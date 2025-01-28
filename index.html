@@ -72,23 +72,29 @@
       let currentCharacter = '';
       let currentDialogue = '';
 
+      // List of disallowed words
+      const disallowedWords = ["screenplay", "database", "8FLiX.com", "educational", "use"];
+
       lines.forEach(line => {
         line = line.trim();
 
         if (!line) return; // Skip empty lines
 
-        // Exclude stage directions (e.g., "INT.", "EXT.", or patterns like "8FLiX.com")
-        if (
-          line.match(/^(INT\.|EXT\.|CUT TO:|DISSOLVE TO:|FADE IN:|FADE OUT:)/) || 
-          line.includes("8FLiX.com") || 
-          line.match(/SCREENPLAY DATABASE/i) ||
-          line.match(/^\(.*\)$/) // Ignore lines entirely in parentheses
-        ) {
+        // Exclude lines containing any disallowed word
+        if (disallowedWords.some(word => line.toLowerCase().includes(word))) {
           return; // Skip this line
         }
 
-        // Detect character name: line in all caps (including multi-word names with punctuation like "MOLLY (V.O.)")
-        if (line.match(/^[A-Z\s\(\)\.\-\/]+$/)) {
+        // Exclude stage directions and lines entirely in parentheses
+        if (
+          line.match(/^(INT\.|EXT\.|CUT TO:|DISSOLVE TO:|FADE IN:|FADE OUT:)/) || // Stage directions
+          line.match(/^\(.*\)$/) // Lines entirely in parentheses
+        ) {
+          return; // Skip these lines
+        }
+
+        // Detect character names: all uppercase, allowing multi-word names with optional punctuation
+        if (line.match(/^[A-Z\s\(\)\.]+$/)) {
           // If we have a previous character's lines, save them as a block
           if (currentCharacter) {
             scriptData.push({ character: currentCharacter, lines: currentDialogue.trim() });
