@@ -77,13 +77,17 @@
 
         if (!line) return; // Skip empty lines
 
-        // Exclude stage directions (e.g., "INT.", "EXT.", or other patterns)
-        if (line.match(/^(INT\.|EXT\.|CUT TO:|DISSOLVE TO:)/)) {
-          return; // Skip this line (it's a stage direction)
+        // Exclude stage directions (e.g., "INT.", "EXT.", or patterns like "8FLiX.com")
+        if (
+          line.match(/^(INT\.|EXT\.|CUT TO:|DISSOLVE TO:|FADE IN:|FADE OUT:)/) || 
+          line.includes("8FLiX.com") || 
+          line.match(/SCREENPLAY DATABASE/i) ||
+          line.match(/^\(.*\)$/) // Ignore lines entirely in parentheses
+        ) {
+          return; // Skip this line
         }
 
         // Detect character name: line in all caps (including multi-word names with punctuation like "MOLLY (V.O.)")
-        // Updated regex to handle "V.O." or similar notations as part of the name
         if (line.match(/^[A-Z\s\(\)\.\-\/]+$/)) {
           // If we have a previous character's lines, save them as a block
           if (currentCharacter) {
